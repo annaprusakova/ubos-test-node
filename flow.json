@@ -11,7 +11,7 @@
         "id": "28963921f204c0c1",
         "type": "tab",
         "label": "Category",
-        "disabled": false,
+        "disabled": true,
         "info": "",
         "env": []
     },
@@ -19,7 +19,7 @@
         "id": "f2fce4517402e624",
         "type": "tab",
         "label": "Order",
-        "disabled": false,
+        "disabled": true,
         "info": "",
         "env": []
     },
@@ -27,7 +27,7 @@
         "id": "ca590b695bf62f7d",
         "type": "tab",
         "label": "Flow 1",
-        "disabled": false,
+        "disabled": true,
         "info": "",
         "env": []
     },
@@ -376,12 +376,12 @@
         "type": "http in",
         "z": "6a1f8a5ca3afbf67",
         "name": "",
-        "url": "/category/total",
+        "url": "/total-quantity",
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
         "x": 130,
-        "y": 660,
+        "y": 1940,
         "wires": [
             [
                 "8a7d5ae9ab401f86"
@@ -393,7 +393,7 @@
         "type": "function",
         "z": "6a1f8a5ca3afbf67",
         "name": "Get the total quantity of products for each category",
-        "func": "msg.payload = [\n    {\n        $lookup: {\n            from: \"category\", \n            localField: \"categoryId\",\n            foreignField: \"_id\",\n            as: \"category_info\"\n        }\n    },\n    {\n        $group: {\n            _id: \"$category_info.name\", \n            total_quantity: { $sum: \"$quantity\" } \n        }\n    },\n    {\n        $project: {\n            _id: 0,\n            categoryName: \"$_id\",\n            total_quantity: 1\n        }\n    }\n]\nreturn msg;",
+        "func": "msg.payload = [\n    {\n        $group: {\n            _id: \"$productId\",\n            total_quantity: { $sum: \"$quantity\" }\n        }\n    },\n    {\n        $addFields: {\n            productObjId: { $toObjectId: \"$_id\" }\n        }\n    },\n    {\n        $lookup: {\n            from: \"product\",\n            localField: \"productObjId\",\n            foreignField: \"_id\",\n            as: \"product_info\"\n        }\n    },\n    {\n        $unwind: \"$product_info\"\n    },\n    {\n        $group: {\n            _id: \"$product_info.categoryId\",\n            total_quantity: { $sum: \"$total_quantity\" }\n        }\n    },\n    {\n        $project: {\n            _id: 0,\n            category_id: \"$_id\",\n            total_quantity: 1\n        }\n    }\n];\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -404,8 +404,8 @@
                 "module": "objectid"
             }
         ],
-        "x": 470,
-        "y": 660,
+        "x": 450,
+        "y": 1940,
         "wires": [
             [
                 "64b559e9ff70e0a5"
@@ -420,7 +420,7 @@
         "statusCode": "",
         "headers": {},
         "x": 870,
-        "y": 660,
+        "y": 1940,
         "wires": []
     },
     {
@@ -432,12 +432,342 @@
         "collection": "product",
         "operation": "aggregate",
         "x": 730,
-        "y": 660,
+        "y": 1940,
         "wires": [
             [
                 "edbfa2672082d58a"
             ]
         ]
+    },
+    {
+        "id": "95e06ffcf7a8da60",
+        "type": "function",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "create new category",
+        "func": "msg.payload.deleted = false;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 800,
+        "wires": [
+            [
+                "4e581120dd1ce60d",
+                "fc6fce4f20ee6d49"
+            ]
+        ]
+    },
+    {
+        "id": "40eedc180a0a7d04",
+        "type": "http in",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "",
+        "url": "/category/new",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 130,
+        "y": 800,
+        "wires": [
+            [
+                "95e06ffcf7a8da60"
+            ]
+        ]
+    },
+    {
+        "id": "4e581120dd1ce60d",
+        "type": "mongodb out",
+        "z": "6a1f8a5ca3afbf67",
+        "mongodb": "9426b3d2a90eb91b",
+        "name": "db",
+        "collection": "category",
+        "payonly": true,
+        "upsert": false,
+        "multi": false,
+        "operation": "insert",
+        "x": 530,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "dbe383963483b4ee",
+        "type": "function",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "get all categories",
+        "func": "msg.payload = {};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 880,
+        "wires": [
+            [
+                "95a67d1bdc875f2a"
+            ]
+        ]
+    },
+    {
+        "id": "4c471caa753db5df",
+        "type": "http in",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "",
+        "url": "/category/all",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 880,
+        "wires": [
+            [
+                "dbe383963483b4ee"
+            ]
+        ]
+    },
+    {
+        "id": "fc6fce4f20ee6d49",
+        "type": "http response",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 530,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "003a83adef272bae",
+        "type": "http response",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 630,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "95a67d1bdc875f2a",
+        "type": "mongodb in",
+        "z": "6a1f8a5ca3afbf67",
+        "mongodb": "9426b3d2a90eb91b",
+        "name": "db",
+        "collection": "category",
+        "operation": "find",
+        "x": 490,
+        "y": 880,
+        "wires": [
+            [
+                "003a83adef272bae"
+            ]
+        ]
+    },
+    {
+        "id": "29a4d63b30e12c96",
+        "type": "function",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "delete a category",
+        "func": "msg.payload = { \"_id\": objectid(msg.payload._id) }\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "objectid",
+                "module": "objectid"
+            }
+        ],
+        "x": 410,
+        "y": 940,
+        "wires": [
+            [
+                "ac221cc204fbda70",
+                "897d9a103f966818"
+            ]
+        ]
+    },
+    {
+        "id": "6e74ac3a9e0ed94a",
+        "type": "http in",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "",
+        "url": "/category/delete",
+        "method": "delete",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 940,
+        "wires": [
+            [
+                "29a4d63b30e12c96"
+            ]
+        ]
+    },
+    {
+        "id": "897d9a103f966818",
+        "type": "http response",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 610,
+        "y": 1000,
+        "wires": []
+    },
+    {
+        "id": "ac221cc204fbda70",
+        "type": "mongodb out",
+        "z": "6a1f8a5ca3afbf67",
+        "mongodb": "9426b3d2a90eb91b",
+        "name": "db",
+        "collection": "category",
+        "payonly": true,
+        "upsert": false,
+        "multi": false,
+        "operation": "delete",
+        "x": 610,
+        "y": 940,
+        "wires": []
+    },
+    {
+        "id": "f97704a80bdbafe7",
+        "type": "function",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "get by id a category",
+        "func": "msg.payload = { \"_id\": objectid(msg.req.params.id) }\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "objectid",
+                "module": "objectid"
+            }
+        ],
+        "x": 340,
+        "y": 1060,
+        "wires": [
+            [
+                "c18114c7040cbd50"
+            ]
+        ]
+    },
+    {
+        "id": "a4ca4d9537cda126",
+        "type": "http in",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "",
+        "url": "/category/:id",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 1060,
+        "wires": [
+            [
+                "f97704a80bdbafe7"
+            ]
+        ]
+    },
+    {
+        "id": "93af3c69f2204345",
+        "type": "http response",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 670,
+        "y": 1060,
+        "wires": []
+    },
+    {
+        "id": "c18114c7040cbd50",
+        "type": "mongodb in",
+        "z": "6a1f8a5ca3afbf67",
+        "mongodb": "9426b3d2a90eb91b",
+        "name": "db",
+        "collection": "category",
+        "operation": "find",
+        "x": 530,
+        "y": 1060,
+        "wires": [
+            [
+                "93af3c69f2204345"
+            ]
+        ]
+    },
+    {
+        "id": "a8c757d3e408a4ea",
+        "type": "http in",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "",
+        "url": "/category/update",
+        "method": "put",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 140,
+        "y": 1120,
+        "wires": [
+            [
+                "c3ba4f72350d41b9"
+            ]
+        ]
+    },
+    {
+        "id": "c3ba4f72350d41b9",
+        "type": "function",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "update category by id",
+        "func": "msg.query = { \"_id\": objectid(msg.payload._id) }\ndelete msg.payload._id\nmsg.payload = {\n    $set: msg.payload\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "objectid",
+                "module": "objectid"
+            }
+        ],
+        "x": 380,
+        "y": 1120,
+        "wires": [
+            [
+                "7ef791fc64aadbef",
+                "82cc884e81f468ee"
+            ]
+        ]
+    },
+    {
+        "id": "7ef791fc64aadbef",
+        "type": "mongodb out",
+        "z": "6a1f8a5ca3afbf67",
+        "mongodb": "9426b3d2a90eb91b",
+        "name": "db",
+        "collection": "category",
+        "payonly": true,
+        "upsert": false,
+        "multi": false,
+        "operation": "update",
+        "x": 570,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "82cc884e81f468ee",
+        "type": "http response",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 590,
+        "y": 1180,
+        "wires": []
     },
     {
         "id": "340b24a0e5d4acf3",
@@ -450,8 +780,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 350,
-        "y": 800,
+        "x": 330,
+        "y": 1320,
         "wires": [
             [
                 "9a1f0c7b6e21f4eb",
@@ -468,8 +798,8 @@
         "method": "post",
         "upload": false,
         "swaggerDoc": "",
-        "x": 140,
-        "y": 800,
+        "x": 120,
+        "y": 1320,
         "wires": [
             [
                 "340b24a0e5d4acf3"
@@ -487,8 +817,8 @@
         "upsert": false,
         "multi": false,
         "operation": "insert",
-        "x": 550,
-        "y": 800,
+        "x": 530,
+        "y": 1320,
         "wires": []
     },
     {
@@ -502,8 +832,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 330,
-        "y": 880,
+        "x": 310,
+        "y": 1400,
         "wires": [
             [
                 "14194c137e9322f6"
@@ -519,8 +849,8 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 130,
-        "y": 880,
+        "x": 110,
+        "y": 1400,
         "wires": [
             [
                 "f8b88c0119147b3c"
@@ -534,8 +864,8 @@
         "name": "",
         "statusCode": "",
         "headers": {},
-        "x": 550,
-        "y": 720,
+        "x": 530,
+        "y": 1240,
         "wires": []
     },
     {
@@ -545,8 +875,8 @@
         "name": "",
         "statusCode": "",
         "headers": {},
-        "x": 650,
-        "y": 880,
+        "x": 630,
+        "y": 1400,
         "wires": []
     },
     {
@@ -557,8 +887,8 @@
         "name": "db",
         "collection": "order",
         "operation": "find",
-        "x": 510,
-        "y": 880,
+        "x": 490,
+        "y": 1400,
         "wires": [
             [
                 "9a34c74ebd54b462"
@@ -581,8 +911,8 @@
                 "module": "objectid"
             }
         ],
-        "x": 380,
-        "y": 940,
+        "x": 360,
+        "y": 1460,
         "wires": [
             [
                 "caa9dd829b33827b",
@@ -599,8 +929,8 @@
         "method": "delete",
         "upload": false,
         "swaggerDoc": "",
-        "x": 150,
-        "y": 940,
+        "x": 130,
+        "y": 1460,
         "wires": [
             [
                 "6be75fe244fecf1c"
@@ -614,8 +944,8 @@
         "name": "",
         "statusCode": "",
         "headers": {},
-        "x": 590,
-        "y": 1000,
+        "x": 570,
+        "y": 1520,
         "wires": []
     },
     {
@@ -629,8 +959,8 @@
         "upsert": false,
         "multi": false,
         "operation": "delete",
-        "x": 590,
-        "y": 940,
+        "x": 570,
+        "y": 1460,
         "wires": []
     },
     {
@@ -649,8 +979,8 @@
                 "module": "objectid"
             }
         ],
-        "x": 340,
-        "y": 1060,
+        "x": 320,
+        "y": 1580,
         "wires": [
             [
                 "da6fd2651558691e"
@@ -666,8 +996,8 @@
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 130,
-        "y": 1060,
+        "x": 110,
+        "y": 1580,
         "wires": [
             [
                 "6b39ded751125a52"
@@ -681,8 +1011,8 @@
         "name": "",
         "statusCode": "",
         "headers": {},
-        "x": 650,
-        "y": 1060,
+        "x": 630,
+        "y": 1580,
         "wires": []
     },
     {
@@ -693,8 +1023,8 @@
         "name": "db",
         "collection": "order",
         "operation": "find",
-        "x": 510,
-        "y": 1060,
+        "x": 490,
+        "y": 1580,
         "wires": [
             [
                 "c6badba42bfe4534"
@@ -710,8 +1040,8 @@
         "method": "put",
         "upload": false,
         "swaggerDoc": "",
-        "x": 150,
-        "y": 1120,
+        "x": 130,
+        "y": 1640,
         "wires": [
             [
                 "09aac37b5fcd3958"
@@ -734,8 +1064,8 @@
                 "module": "objectid"
             }
         ],
-        "x": 390,
-        "y": 1120,
+        "x": 370,
+        "y": 1640,
         "wires": [
             [
                 "e5cf6243a577345f",
@@ -754,8 +1084,8 @@
         "upsert": false,
         "multi": false,
         "operation": "update",
-        "x": 590,
-        "y": 1120,
+        "x": 570,
+        "y": 1640,
         "wires": []
     },
     {
@@ -765,8 +1095,8 @@
         "name": "",
         "statusCode": "",
         "headers": {},
-        "x": 610,
-        "y": 1180,
+        "x": 590,
+        "y": 1700,
         "wires": []
     },
     {
@@ -774,12 +1104,12 @@
         "type": "http in",
         "z": "6a1f8a5ca3afbf67",
         "name": "",
-        "url": "/order/best-selling",
+        "url": "/best-selling",
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 160,
-        "y": 1280,
+        "x": 120,
+        "y": 1800,
         "wires": [
             [
                 "503e2a2303c29c2a"
@@ -791,14 +1121,14 @@
         "type": "function",
         "z": "6a1f8a5ca3afbf67",
         "name": "Get the top 5 best-selling products based on order quantities",
-        "func": "const { ObjectId } = global.get('mongodb');\n\nmsg.payload = [\n    {\n        $group: {\n            _id: \"$productId\",\n            total_quantity: { $sum: \"$quantity\" }\n        }\n    },\n    {\n        $sort: { total_quantity: -1 }\n    },\n    {\n        $limit: 5\n    },\n    {\n        $addFields: {\n            productObjId: { $toObjectId: \"$_id\" }\n        }\n    },\n    {\n        $lookup: {\n            from: \"product\",\n            localField: \"productObjId\",\n            foreignField: \"_id\",\n            as: \"product_info\"\n        }\n    },\n    {\n        $unwind: \"$product_info\"\n    },\n    {\n        $project: {\n            _id: 0,\n            product_id: \"$_id\",\n            product_name: \"$product_info.name\",\n            category_id: \"$product_info.categoryId\",\n            category_name: \"$product_info.categoryName\",\n            price: \"$product_info.price\",\n            total_quantity: 1\n        }\n    }\n];\n\nreturn msg;",
+        "func": "msg.payload = [\n    {\n        $group: {\n            _id: \"$productId\",\n            total_quantity: { $sum: \"$quantity\" }\n        }\n    },\n    {\n        $sort: { total_quantity: -1 }\n    },\n    {\n        $limit: 5\n    },\n    {\n        $addFields: {\n            productObjId: { $toObjectId: \"$productId\" }\n        }\n    },\n    {\n        $lookup: {\n            from: \"product\",\n            localField: \"productObjId\",\n            foreignField: \"_id\",\n            as: \"product_info\"\n        }\n    },\n    {\n        $unwind: \"$product_info\"\n    },\n    {\n        $project: {\n            _id: 0,\n            product_id: \"$_id\",\n            product_name: \"$product_info.name\",\n            category_id: \"$product_info.categoryId\",\n            category_name: \"$product_info.categoryName\",\n            price: \"$product_info.price\",\n            total_quantity: 1\n        }\n    }\n];\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 520,
-        "y": 1280,
+        "x": 500,
+        "y": 1800,
         "wires": [
             [
                 "09b50dd06e835261"
@@ -813,8 +1143,8 @@
         "name": "db",
         "collection": "order",
         "operation": "aggregate",
-        "x": 850,
-        "y": 1280,
+        "x": 830,
+        "y": 1800,
         "wires": [
             [
                 "48eb7368e03405a0"
@@ -828,338 +1158,134 @@
         "name": "",
         "statusCode": "",
         "headers": {},
-        "x": 990,
-        "y": 1280,
+        "x": 970,
+        "y": 1800,
         "wires": []
     },
     {
-        "id": "95e06ffcf7a8da60",
-        "type": "function",
-        "z": "28963921f204c0c1",
-        "name": "create new category",
-        "func": "msg.payload.deleted = false;\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 340,
-        "y": 140,
-        "wires": [
-            [
-                "4e581120dd1ce60d",
-                "fc6fce4f20ee6d49"
-            ]
-        ]
-    },
-    {
-        "id": "40eedc180a0a7d04",
+        "id": "a570284774f08615",
         "type": "http in",
-        "z": "28963921f204c0c1",
+        "z": "6a1f8a5ca3afbf67",
         "name": "",
-        "url": "/category/new",
-        "method": "post",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 130,
-        "y": 140,
-        "wires": [
-            [
-                "95e06ffcf7a8da60"
-            ]
-        ]
-    },
-    {
-        "id": "4e581120dd1ce60d",
-        "type": "mongodb out",
-        "z": "28963921f204c0c1",
-        "mongodb": "9426b3d2a90eb91b",
-        "name": "db",
-        "collection": "category",
-        "payonly": true,
-        "upsert": false,
-        "multi": false,
-        "operation": "insert",
-        "x": 530,
-        "y": 140,
-        "wires": []
-    },
-    {
-        "id": "dbe383963483b4ee",
-        "type": "function",
-        "z": "28963921f204c0c1",
-        "name": "get all categories",
-        "func": "msg.payload = {};\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 330,
-        "y": 220,
-        "wires": [
-            [
-                "95a67d1bdc875f2a"
-            ]
-        ]
-    },
-    {
-        "id": "4c471caa753db5df",
-        "type": "http in",
-        "z": "28963921f204c0c1",
-        "name": "",
-        "url": "/category/all",
+        "url": "/low-stock-product",
         "method": "get",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 120,
-        "y": 220,
-        "wires": [
-            [
-                "dbe383963483b4ee"
-            ]
-        ]
-    },
-    {
-        "id": "fc6fce4f20ee6d49",
-        "type": "http response",
-        "z": "28963921f204c0c1",
-        "name": "",
-        "statusCode": "",
-        "headers": {},
-        "x": 530,
-        "y": 60,
-        "wires": []
-    },
-    {
-        "id": "003a83adef272bae",
-        "type": "http response",
-        "z": "28963921f204c0c1",
-        "name": "",
-        "statusCode": "",
-        "headers": {},
-        "x": 630,
-        "y": 220,
-        "wires": []
-    },
-    {
-        "id": "95a67d1bdc875f2a",
-        "type": "mongodb in",
-        "z": "28963921f204c0c1",
-        "mongodb": "9426b3d2a90eb91b",
-        "name": "db",
-        "collection": "category",
-        "operation": "find",
-        "x": 490,
-        "y": 220,
-        "wires": [
-            [
-                "003a83adef272bae"
-            ]
-        ]
-    },
-    {
-        "id": "29a4d63b30e12c96",
-        "type": "function",
-        "z": "28963921f204c0c1",
-        "name": "delete a category",
-        "func": "msg.payload = { \"_id\": objectid(msg.payload._id) }\n\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [
-            {
-                "var": "objectid",
-                "module": "objectid"
-            }
-        ],
-        "x": 410,
-        "y": 280,
-        "wires": [
-            [
-                "ac221cc204fbda70",
-                "897d9a103f966818"
-            ]
-        ]
-    },
-    {
-        "id": "6e74ac3a9e0ed94a",
-        "type": "http in",
-        "z": "28963921f204c0c1",
-        "name": "",
-        "url": "/category/delete",
-        "method": "delete",
         "upload": false,
         "swaggerDoc": "",
         "x": 150,
-        "y": 280,
+        "y": 1880,
         "wires": [
             [
-                "29a4d63b30e12c96"
+                "b1f5d83232cc35aa"
             ]
         ]
     },
     {
-        "id": "897d9a103f966818",
-        "type": "http response",
-        "z": "28963921f204c0c1",
-        "name": "",
-        "statusCode": "",
-        "headers": {},
-        "x": 610,
-        "y": 340,
-        "wires": []
-    },
-    {
-        "id": "ac221cc204fbda70",
-        "type": "mongodb out",
-        "z": "28963921f204c0c1",
-        "mongodb": "9426b3d2a90eb91b",
-        "name": "db",
-        "collection": "category",
-        "payonly": true,
-        "upsert": false,
-        "multi": false,
-        "operation": "delete",
-        "x": 610,
-        "y": 280,
-        "wires": []
-    },
-    {
-        "id": "f97704a80bdbafe7",
+        "id": "b1f5d83232cc35aa",
         "type": "function",
-        "z": "28963921f204c0c1",
-        "name": "get by id a category",
-        "func": "msg.payload = { \"_id\": objectid(msg.req.params.id) }\n\nreturn msg;",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "Get the list of products that have been ordered but have a quantity less than 10 in stock",
+        "func": "msg.payload = [\n    {\n        $lookup: {\n            from: \"order\",\n            localField: \"_id\",\n            foreignField: \"productId\",\n            as: \"orders\"\n        }\n    },\n    {\n        $addFields: {\n            available_quantity: { $subtract: [\"$quantity\", { $sum: \"$orders.quantity\" }] }\n        }\n    },\n    {\n        $match: {\n            available_quantity: { $lt: 10 }\n        }\n    },\n    {\n        $project: {\n            _id: 0,\n            name: 1,\n            available_quantity: 1\n        }\n    }\n];\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "libs": [
-            {
-                "var": "objectid",
-                "module": "objectid"
-            }
-        ],
-        "x": 340,
-        "y": 400,
+        "libs": [],
+        "x": 610,
+        "y": 1880,
         "wires": [
             [
-                "c18114c7040cbd50"
+                "0c1270579be853be"
             ]
         ]
     },
     {
-        "id": "a4ca4d9537cda126",
-        "type": "http in",
-        "z": "28963921f204c0c1",
+        "id": "0c1270579be853be",
+        "type": "mongodb in",
+        "z": "6a1f8a5ca3afbf67",
+        "mongodb": "9426b3d2a90eb91b",
+        "name": "db",
+        "collection": "product",
+        "operation": "aggregate",
+        "x": 1010,
+        "y": 1880,
+        "wires": [
+            [
+                "3e3dd7bcffa6cbb1"
+            ]
+        ]
+    },
+    {
+        "id": "3e3dd7bcffa6cbb1",
+        "type": "http response",
+        "z": "6a1f8a5ca3afbf67",
         "name": "",
-        "url": "/category/:id",
+        "statusCode": "",
+        "headers": {},
+        "x": 1130,
+        "y": 1880,
+        "wires": []
+    },
+    {
+        "id": "1fe7dd99f86068d9",
+        "type": "http in",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "",
+        "url": "/total-revenue",
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 120,
-        "y": 400,
+        "x": 130,
+        "y": 2020,
         "wires": [
             [
-                "f97704a80bdbafe7"
+                "fd9bd63ba451ebeb"
             ]
         ]
     },
     {
-        "id": "93af3c69f2204345",
-        "type": "http response",
-        "z": "28963921f204c0c1",
-        "name": "",
-        "statusCode": "",
-        "headers": {},
-        "x": 670,
-        "y": 400,
-        "wires": []
-    },
-    {
-        "id": "c18114c7040cbd50",
-        "type": "mongodb in",
-        "z": "28963921f204c0c1",
-        "mongodb": "9426b3d2a90eb91b",
-        "name": "db",
-        "collection": "category",
-        "operation": "find",
-        "x": 530,
-        "y": 400,
-        "wires": [
-            [
-                "93af3c69f2204345"
-            ]
-        ]
-    },
-    {
-        "id": "a8c757d3e408a4ea",
-        "type": "http in",
-        "z": "28963921f204c0c1",
-        "name": "",
-        "url": "/category/update",
-        "method": "put",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 140,
-        "y": 460,
-        "wires": [
-            [
-                "c3ba4f72350d41b9"
-            ]
-        ]
-    },
-    {
-        "id": "c3ba4f72350d41b9",
+        "id": "fd9bd63ba451ebeb",
         "type": "function",
-        "z": "28963921f204c0c1",
-        "name": "update category by id",
-        "func": "msg.query = { \"_id\": objectid(msg.payload._id) }\ndelete msg.payload._id\nmsg.payload = {\n    $set: msg.payload\n}\nreturn msg;",
+        "z": "6a1f8a5ca3afbf67",
+        "name": "Get the total revenue generated from orders placed within a specific date range",
+        "func": "var startDate = msg.req.query.startDate;\nvar endDate = msg.req.query.endDate;\n\nmsg.payload = [\n    {\n        $match: {\n            date: {\n                $gte: new Date(startDate),\n                $lte: new Date(endDate)\n            }\n        }\n    },\n    {\n        $group: {\n            _id: null,\n            total_revenue: { $sum: \"$cost\" }\n        }\n    },\n    {\n        $project: {\n            _id: 0,\n            total_revenue: 1\n        }\n    }\n];\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "libs": [
-            {
-                "var": "objectid",
-                "module": "objectid"
-            }
-        ],
-        "x": 380,
-        "y": 460,
+        "libs": [],
+        "x": 540,
+        "y": 2020,
         "wires": [
             [
-                "7ef791fc64aadbef",
-                "82cc884e81f468ee"
+                "b349b30f0ef6cb4f"
             ]
         ]
     },
     {
-        "id": "7ef791fc64aadbef",
-        "type": "mongodb out",
-        "z": "28963921f204c0c1",
+        "id": "b349b30f0ef6cb4f",
+        "type": "mongodb in",
+        "z": "6a1f8a5ca3afbf67",
         "mongodb": "9426b3d2a90eb91b",
         "name": "db",
-        "collection": "category",
-        "payonly": true,
-        "upsert": false,
-        "multi": false,
-        "operation": "update",
-        "x": 570,
-        "y": 460,
-        "wires": []
+        "collection": "order",
+        "operation": "aggregate",
+        "x": 910,
+        "y": 2020,
+        "wires": [
+            [
+                "4fa96a551dcc2819"
+            ]
+        ]
     },
     {
-        "id": "82cc884e81f468ee",
+        "id": "4fa96a551dcc2819",
         "type": "http response",
-        "z": "28963921f204c0c1",
+        "z": "6a1f8a5ca3afbf67",
         "name": "",
         "statusCode": "",
         "headers": {},
-        "x": 590,
-        "y": 520,
+        "x": 1030,
+        "y": 2020,
         "wires": []
     }
 ]
